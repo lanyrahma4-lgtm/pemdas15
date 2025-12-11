@@ -1,7 +1,10 @@
 <?php
 include('../config.php'); 
 $current_page = basename($_SERVER['PHP_SELF']);
-$is_data_base = ($current_page == 'data-anggota.php' || $current_page == 'tambah-anggota.php' || $current_page == 'data-admin.php' || $current_page == 'tambah-admin.php' || $current_page == 'data-buku.php' || $current_page == 'tambah-buku.php' || $current_page == 'detail-buku.php'); // Ditambahkan detail
+// TAMBAH data-peminjaman.php dan data-pengembalian.php ke logic $is_data_base
+$is_data_base = ($current_page == 'data-anggota.php' || $current_page == 'tambah-anggota.php' || $current_page == 'data-admin.php' || $current_page == 'tambah-admin.php' || $current_page == 'data-buku.php' || $current_page == 'tambah-buku.php' || $current_page == 'detail-buku.php'); 
+// Tambahkan variabel baru untuk menu transaksi
+$is_transaksi = ($current_page == 'data-peminjaman.php' || $current_page == 'data-pengembalian.php');
 ?>
 
 <aside class="sidebar">
@@ -18,7 +21,18 @@ $is_data_base = ($current_page == 'data-anggota.php' || $current_page == 'tambah
                 <li><a href="<?php echo $base_url; ?>/admin/data-buku.php" class="<?php echo ($current_page == 'data-buku.php' || $current_page == 'tambah-buku.php' || $current_page == 'detail-buku.php') ? 'active' : ''; ?>">Data Buku</a></li>
             </ul>
         </li>
-        <li><a href="#">Peminjaman</a></li>
-        <li><a href="#">Pengembalian</a></li>
+        
+        <li class="has-submenu">
+            <a href="#" class="<?php echo $is_transaksi ? 'active' : ''; ?>">Transaksi</a>
+            <ul style="list-style: none; padding: 0;">
+                 <li>
+                    <a href="<?php echo $base_url; ?>/admin/dataPeminjaman.php" class="<?php echo ($current_page == 'dataPeminjaman.php') ? 'active' : ''; ?>">Peminjaman</a>
+                </li>
+                <li>
+                    <a href="<?php echo $base_url; ?>/admin/dataPengembalian.php" class="<?php echo ($current_page == 'dataPengembalian.php') ? 'active' : ''; ?>">Pengembalian</a>
+                </li>
+            </ul>
+        </li>
+        <li><a href="<?php echo $base_url; ?>/logout.php">Logout</a></li>
     </ul>
 </aside>

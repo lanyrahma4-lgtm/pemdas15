@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Dummy credentials (replace with database lookup)
     if ($email === 'admin@polije.ac.id' && $password === '12345') {
         $_SESSION['user'] = $email;
-        header('Location: dashboard.php');
+        header('Location: admin/dashboard.php');
         exit;
     } else {
         $error = 'Email atau password salah.';
