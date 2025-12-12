@@ -7,6 +7,15 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 $admin_nama = $_SESSION['admin_nama'];
+if (isset($_GET['action']) && $_GET['action'] === 'hapus') {
+
+    $id = intval($_GET['id']);
+
+    $conn->query("DELETE FROM admin WHERE id=$id");
+
+    header("Location: data-admin.php?msg=deleted");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -96,8 +105,8 @@ $admin_nama = $_SESSION['admin_nama'];
                                     echo "<td>" . htmlspecialchars($row['email']) . "</td>";
                                     echo "<td>" . htmlspecialchars($row['password']) . "</td>"; 
                                     echo "<td>";
-                                    echo "<a href='edit-admin.php?id=" . $row['id'] . "' class='action-btn btn-edit'>edit</a>";
-                                    echo "<a href='hapus-admin.php?id=" . $row['id'] . "' class='action-btn btn-hapus' onclick='return confirm(\"Yakin hapus " . htmlspecialchars($row['nama']) . "?\")'>hapus</a>";
+                                    echo "<a href='edit_admin.php?id=" . $row['id'] . "' class='action-btn btn-edit'>edit</a>";
+                                    echo "<a href='data-admin.php?action=hapus&id=" . $row['id'] . "' class='action-btn btn-hapus' onclick='return confirm(\"Yakin hapus " . htmlspecialchars($row['nama']) . "?\")'>hapus</a>";
                                     echo "</td>";
                                     echo "</tr>";
                                 }
