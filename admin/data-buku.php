@@ -6,6 +6,16 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus_id'])) {
+
+    $id = intval($_POST['hapus_id']);
+
+    $conn->query("DELETE FROM buku WHERE id = $id");
+
+    header("Location: data-buku.php?msg=deleted");
+    exit;
+}
+
 $admin_nama = $_SESSION['admin_nama'];
 ?>
 <!DOCTYPE html>
@@ -72,8 +82,17 @@ $admin_nama = $_SESSION['admin_nama'];
                                     echo "<td>" . htmlspecialchars($row['jumlah']) . "</td>";
 
                                     echo "<td>";
-                                    echo "<a href='edit-buku.php?id=" . $row['id'] . "' class='action-btn btn-edit'>edit</a>";
-                                    echo "<a href='hapus-buku.php?id=" . $row['id'] . "' class='action-btn btn-hapus' onclick='return confirm(\"Yakin hapus " . htmlspecialchars($row['judul']) . "?\")'>hapus</a>";
+                                    echo "<a href='edit_buku.php?id=" . $row['id'] . "' class='action-btn btn-edit'>edit</a>";
+                                    echo "
+                                    <form method='POST' action='data-buku.php' style='display:inline;'>
+                                        <input type='hidden' name='hapus_id' value='" . $row['id'] . "'>
+                                        <button 
+                                            type='submit' 
+                                            class='action-btn btn-hapus'
+                                            onclick='return confirm(\"Yakin hapus " . htmlspecialchars($row['judul']) . "?\")'>
+                                            hapus
+                                        </button>
+                                    </form>";
                                     echo "<a href='" . $base_url . "/admin/detail-buku.php?id=" . $row['id'] . "' class='action-btn btn-detail'>Detail</a>";
                                     echo "</td>";
 
