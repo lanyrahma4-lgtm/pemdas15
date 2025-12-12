@@ -1,65 +1,89 @@
 <?php
-// admin/data-pengembalian.php
-// Pastikan file config.php berada satu tingkat di atas folder 'admin'
-include('../config.php'); 
-
-// --- Data Dummy Transaksi yang Sudah Dikembalikan ---
-// Kita akan menampilkan data yang statusnya 'Dikembalikan' dan menambahkan Tanggal Pengembalian
-$data_pengembalian = [
-    [
-        'no' => 3,
-        'nama_peminjam' => 'Budi',
-        'judul_buku' => 'Filosofi Teras',
-        'tgl_pinjam' => '2025-11-10',
-        'tgl_kembali' => '2025-11-17', // Data baru: Tanggal Pengembalian
-        'denda' => 0,
-        'status' => 'Dikembalikan'
-    ],
-    [
-        'no' => 4,
-        'nama_peminjam' => 'Sinta',
-        'judul_buku' => 'The Lord of the Rings',
-        'tgl_pinjam' => '2025-10-25',
-        'tgl_kembali' => '2025-11-01',
-        'denda' => 25000, 
-        'status' => 'Dikembalikan'
-    ],
-    [
-        'no' => 5,
-        'nama_peminjam' => 'Joko',
-        'judul_buku' => 'Kalkulus Lanjut',
-        'tgl_pinjam' => '2025-11-28',
-        'tgl_kembali' => '2025-12-05',
-        'denda' => 0, 
-        'status' => 'Dikembalikan'
-    ],
-];
-
-// --- Menangani aksi 'Hapus' (jika diperlukan) ---
-// Logika POST biasanya hanya untuk aksi yang mengubah database (Edit/Hapus)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] == 'hapus' && isset($_POST['id'])) {
-    
-    $id_transaksi = (int)$_POST['id'];
-    
-    // Logika simulasi hapus data
-    // $db->query("DELETE FROM pengembalian WHERE id = $id_transaksi");
-    
-    $message = '<div class="alert-success">🗑️ Transaksi Pengembalian No. **' . $id_transaksi . '** berhasil dihapus (simulasi).</div>';
-    // Sebaiknya lakukan Redirect setelah POST
+include('../koneksi.php');
+session_start();
+if (!isset($_SESSION['admin_id'])) {
+    header("Location: ../login.php");
+    exit;
 }
 
-$admin_name = isset($admin_name) ? $admin_name : "Pegawai";
-$message = isset($message) ? $message : ''; 
+$admin_nama = $_SESSION['admin_nama'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'hapus') {
+
+    $id = intval($_POST['id']);
+
+    $get = $conn->query("SELECT id_pinjam FROM kembali WHERE id = $id");
+
+    if ($get && $get->num_rows > 0) {
+
+        $row = $get->fetch_assoc();
+        $id_pinjam = intval($row['id_pinjam']);
+        $delete_kembali = $conn->query("DELETE FROM kembali WHERE id = $id");
+
+        if ($delete_kembali) {
+
+            $delete_pinjam = $conn->query("DELETE FROM pinjam WHERE id = $id_pinjam");
+
+
+            header("Location: dataPengembalian.php?msg=deleted");
+            exit;
+        } else {
+            echo "Error hapus data kembali: " . $conn->error;
+        }
+    } else {
+        echo "Data tidak ditemukan!";
+    }
+}
+
+
+
+$sql = "
+SELECT 
+    kembali.id AS kembali_id,
+    pinjam.id AS pinjam_id,
+    anggota.nama AS nama_peminjam,
+    buku.judul AS judul_buku,
+    pinjam.tanggal_pinjam,
+    kembali.tanggal_kembali,
+    pinjam.denda,
+    kembali.status
+FROM kembali
+JOIN pinjam ON kembali.id_pinjam = pinjam.id
+JOIN anggota ON pinjam.id_anggota = anggota.id
+JOIN buku ON pinjam.id_buku = buku.id
+ORDER BY kembali.id DESC
+";
+
+$result = $conn->query($sql);
+
+$data_pengembalian = [];
+$no = 1;
+
+while ($row = $result->fetch_assoc()) {
+    $data_pengembalian[] = [
+        'no' => $no++,
+        'nama_peminjam' => $row['nama_peminjam'],
+        'judul_buku' => $row['judul_buku'],
+        'tgl_pinjam' => $row['tanggal_pinjam'],
+        'tgl_kembali' => $row['tanggal_kembali'],
+        'denda' => $row['denda'],
+        'status' => $row['status'],
+        'id_kembali' => $row['kembali_id']
+    ];
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Pengembalian - Admin</title>
-    <link rel="stylesheet" href="<?php echo $base_url; ?>/style.css"> 
+    <link rel="stylesheet" href="<?php echo $base_url; ?>/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="admin-layout">
         <?php include('partials/sidebar.php'); ?>
@@ -67,7 +91,9 @@ $message = isset($message) ? $message : '';
         <main class="admin-main-content">
             <header class="admin-header">
                 <h2>Data Pengembalian Buku</h2>
-                <div class="welcome-text">Selamat Pagi, Pegawai **<?php echo htmlspecialchars($admin_name); ?>**</div>
+                <div class="welcome-text">
+                    Selamat Pagi, Pegawai <strong><?php echo htmlspecialchars($admin_nama); ?></strong>
+                </div>
             </header>
 
             <?php if (!empty($message)): ?>
@@ -77,7 +103,6 @@ $message = isset($message) ? $message : '';
             <div class="data-table-section">
                 <div class="table-header">
                     <input type="text" placeholder="Cari transaksi..." class="search-input">
-                    <a href="#" class="add-btn">Verifikasi Pengembalian</a>
                 </div>
 
                 <div class="table-placeholder">
@@ -88,42 +113,42 @@ $message = isset($message) ? $message : '';
                                 <th>Nama Peminjam</th>
                                 <th>Judul Buku</th>
                                 <th>Tanggal Pinjam</th>
-                                <th>Tanggal Kembali</th> <th>Denda</th>
+                                <th>Tanggal Kembali</th>
+                                <th>Denda</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($data_pengembalian as $row): ?>
-                            <tr>
-                                <td><?php echo $row['no']; ?></td>
-                                <td><?php echo htmlspecialchars($row['nama_peminjam']); ?></td>
-                                <td><?php echo htmlspecialchars($row['judul_buku']); ?></td>
-                                <td><?php echo $row['tgl_pinjam']; ?></td>
-                                <td>**<?php echo $row['tgl_kembali']; ?>**</td> 
-                                <td><?php echo 'Rp ' . number_format($row['denda'], 0, ',', '.'); ?></td>
-                                <td>
-                                    <span class="status-<?php echo strtolower(str_replace(' ', '-', $row['status'])); ?>">
-                                        <?php echo $row['status']; ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="#" class="action-btn btn-edit">Detail</a>
-                                    
-                                    <form method="POST" action="dataPengembalian.php" style="display:inline;">
-                                        <input type="hidden" name="action" value="hapus">
-                                        <input type="hidden" name="id" value="<?php echo $row['no']; ?>">
-                                        
-                                        <button 
-                                            type="submit" 
-                                            class="action-btn btn-hapus" 
-                                            onclick="return confirm('Yakin ingin menghapus riwayat pengembalian No <?php echo $row['no']; ?>?');"
-                                        >
-                                            Hapus
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?php echo $row['no']; ?></td>
+                                    <td><?php echo htmlspecialchars($row['nama_peminjam']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['judul_buku']); ?></td>
+                                    <td><?php echo $row['tgl_pinjam']; ?></td>
+                                    <td><?php echo $row['tgl_kembali']; ?></td>
+                                    <td><?php echo 'Rp ' . number_format($row['denda'], 0, ',', '.'); ?></td>
+                                    <td>
+                                        <span class="status-<?php echo strtolower(str_replace(' ', '-', $row['status'])); ?>">
+                                            <?php echo $row['status']; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="dataPengembalian.php" style="display:inline;">
+                                            <input type="hidden" name="action" value="hapus">
+                                            <input type="hidden" name="id" value="<?php echo $row['id_kembali']; ?>">
+
+                                            <button
+                                                type="submit"
+                                                class="action-btn btn-hapus"
+                                                onclick="return confirm('Yakin ingin menghapus riwayat pengembalian ini?');">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </td>
+
+
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -132,4 +157,5 @@ $message = isset($message) ? $message : '';
         </main>
     </div>
 </body>
+
 </html>

@@ -46,6 +46,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] == 'kembalikan') {
+
+    $id_pinjam = intval($_POST['id_pinjam']);
+    $q = $conn->query("SELECT tenggat FROM pinjam WHERE id = $id_pinjam");
+    $data = $q->fetch_assoc();
+
+    $tenggat = strtotime($data['tenggat']);
+    $now = strtotime(date("Y-m-d"));
+
+    $status = ($now > $tenggat) ? "telat" : "ontime";
+
+    $conn->query("
+        INSERT INTO kembali (id_pinjam, tanggal_kembali, status)
+        VALUES ($id_pinjam, NOW(), '$status')
+    ");
+
+    $conn->query("
+        UPDATE pinjam
+        SET status = 'Dikembalikan'
+        WHERE id = $id_pinjam
+    ");
+
+    header("Location: dataPeminjaman.php?success=1");
+    exit;
+}
+
+
 
 $sql = "
     SELECT p.id, a.nama AS nama_peminjam, b.judul AS judul_buku,
@@ -53,10 +80,12 @@ $sql = "
     FROM pinjam p
     JOIN anggota a ON p.id_anggota = a.id
     JOIN buku b ON p.id_buku = b.id
+    WHERE p.status = 'Dipinjam'
     ORDER BY p.id DESC
 ";
 
 $data_peminjaman = $conn->query($sql);
+
 
 ?>
 
@@ -124,7 +153,7 @@ $data_peminjaman = $conn->query($sql);
             box-shadow: 0 0 3px rgba(91, 141, 247, 0.5);
         }
 
-       
+
         .modal-actions {
             margin-top: 10px;
             display: flex;
@@ -167,6 +196,32 @@ $data_peminjaman = $conn->query($sql);
                 transform: scale(1);
                 opacity: 1;
             }
+        }
+
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn-yes,
+        .btn-no {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-yes {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-no {
+            background: #dc3545;
+            color: white;
         }
     </style>
 </head>
@@ -320,7 +375,22 @@ $data_peminjaman = $conn->query($sql);
                         </form>
                     </div>
                 </div>
+                <div id="returnModal" class="modal">
+                    <div class="modal-box">
+                        <h3>Konfirmasi Pengembalian</h3>
+                        <p>Apakah buku ini sudah benar-benar dikembalikan?</p>
 
+                        <form method="POST">
+                            <input type="hidden" name="action" value="kembalikan">
+                            <input type="hidden" name="id_pinjam" id="modalPinjamId">
+
+                            <div class="modal-buttons">
+                                <button type="submit" class="btn-yes">Ya</button>
+                                <button type="button" onclick="closeReturnModal()" class="btn-no">Tidak</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
             </div>
         </main>
@@ -369,7 +439,16 @@ $data_peminjaman = $conn->query($sql);
                 document.getElementById("editModal").style.display = "none";
             }
         </script>
+        <script>
+            function showConfirmationModal(id) {
+                document.getElementById("modalPinjamId").value = id;
+                document.getElementById("returnModal").style.display = "flex";
+            }
 
+            function closeReturnModal() {
+                document.getElementById("returnModal").style.display = "none";
+            }
+        </script>
 
     </div>
 </body>
