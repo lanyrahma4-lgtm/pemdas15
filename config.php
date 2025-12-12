@@ -9,13 +9,13 @@ $base_url = "http://localhost/pemdas15";
 
 
 // DATA DUMMY
-$ADMIN_EMAIL = 'admin@polije.ac.id';
-$ADMIN_PASSWORD = 'admin123';
-$admin_name = "Farid Thaufiqul Karimah"; 
+// $ADMIN_EMAIL = 'admin@polije.ac.id';
+// $ADMIN_PASSWORD = 'admin123';
+// $admin_name = "Farid Thaufiqul Karimah"; 
 
-$stats = [
-    'anggota' => 78,
-    'admin' => 2,
-    'buku' => 150, // Diperbarui sesuai wireframe
-];
+// $stats = [
+//     'anggota' => 78,
+//     'admin' => 2,
+//     'buku' => 150, 
+// ];
 ?>

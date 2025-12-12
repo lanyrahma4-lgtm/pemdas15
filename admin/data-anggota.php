@@ -1,5 +1,12 @@
 <?php
-include('../config.php'); 
+include('../koneksi.php'); 
+session_start();
+if (!isset($_SESSION['admin_id'])) {
+    header("Location: ../login.php");
+    exit;
+}
+
+$admin_nama = $_SESSION['admin_nama'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -25,7 +32,9 @@ include('../config.php');
         <main class="admin-main-content">
             <header class="admin-header">
                 <h2>Data Anggota</h2>
-                <div class="welcome-text">Selamat Pagi, Pegawai **<?php echo htmlspecialchars($admin_name); ?>**</div>
+                <div class="welcome-text">
+                    Selamat Pagi, Pegawai <strong><?php echo htmlspecialchars($admin_nama); ?></strong>
+                </div>
             </header>
 
             <div class="data-table-section">
@@ -47,28 +56,30 @@ include('../config.php');
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            $anggota_dummy = [
-                                ['id' => 1, 'nama' => 'Rahmat Hidayat', 'nim' => '32041234', 'prodi' => 'TIF', 'telp' => '0812xxxxxx'],
-                                ['id' => 2, 'nama' => 'Siti Aisyah', 'nim' => '32045678', 'prodi' => 'TM', 'telp' => '0813xxxxxx'],
-                                ['id' => 3, 'nama' => 'Budi Santoso', 'nim' => '32049012', 'prodi' => 'TE', 'telp' => '0814xxxxxx'],
-                            ];
-                            
-                            foreach ($anggota_dummy as $index => $data) {
-                                echo '<tr>';
-                                echo '<td>' . ($index + 1) . '</td>';
-                                echo '<td>' . htmlspecialchars($data['nama']) . '</td>';
-                                echo '<td>' . htmlspecialchars($data['nim']) . '</td>';
-                                echo '<td>' . htmlspecialchars($data['prodi']) . '</td>';
-                                echo '<td>' . htmlspecialchars($data['telp']) . '</td>';
-                                echo '<td>';
-                                echo '<button class="action-btn btn-edit" onclick="alert(\'Edit Anggota ID ' . $data['id'] . '\')">edit</button>';
-                                echo '<button class="action-btn btn-hapus" onclick="if(confirm(\'Yakin hapus ' . htmlspecialchars($data['nama']) . '?\')) { alert(\'Dihapus!\'); }">hapus</button>';
-                                echo '</td>';
-                                echo '</tr>';
+                            <?php 
+                            $query = $conn->query("SELECT * FROM anggota ORDER BY id DESC");
+                            $no = 1;
+
+                            if ($query->num_rows > 0) {
+                                while ($row = $query->fetch_assoc()) {
+                                    echo "<tr>";
+                                    echo "<td>" . $no++ . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['nama']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['nim']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['prodi']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['notlp']) . "</td>";
+                                    echo "<td>";
+                                    echo "<a href='edit-anggota.php?id=" . $row['id'] . "' class='action-btn btn-edit'>edit</a>";
+                                    echo "<a href='hapus-anggota.php?id=" . $row['id'] . "' class='action-btn btn-hapus' onclick='return confirm(\"Yakin hapus " . htmlspecialchars($row['nama']) . "?\")'>hapus</a>";
+                                    echo "</td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='6'>Belum ada anggota.</td></tr>";
                             }
                             ?>
                         </tbody>
+
                     </table>
                 </div>
             </div>

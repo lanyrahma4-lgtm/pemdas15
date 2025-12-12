@@ -1,5 +1,26 @@
+
 <?php
-include('../config.php'); 
+session_start();
+if (!isset($_SESSION['admin_id'])) {
+    header("Location: ../login.php");
+    exit;
+}
+
+$admin_nama = $_SESSION['admin_nama'];
+
+include('../koneksi.php');
+
+$anggota = $conn->query("SELECT COUNT(*) AS total FROM anggota")->fetch_assoc()['total'];
+
+$admin = $conn->query("SELECT COUNT(*) AS total FROM admin")->fetch_assoc()['total'];
+
+$buku = $conn->query("SELECT COUNT(*) AS total FROM buku")->fetch_assoc()['total'];
+
+$stats = [
+    'anggota' => $anggota,
+    'admin' => $admin,
+    'buku' => $buku
+];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -17,7 +38,9 @@ include('../config.php');
         <main class="admin-main-content">
             <header class="admin-header">
                 <h2>Dashboard Anda</h2>
-                <div class="welcome-text">Selamat Pagi, Pegawai **<?php echo htmlspecialchars($admin_name); ?>**</div>
+                <div class="welcome-text">
+                    Selamat Pagi, Pegawai <strong><?php echo htmlspecialchars($admin_nama); ?></strong>
+                </div>
             </header>
 
             <div class="dashboard-cards">
